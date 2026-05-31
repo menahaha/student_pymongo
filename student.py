@@ -29,11 +29,23 @@ def create_documents():
 
 printer = pprint.PrettyPrinter()
 
-def find_all_students():
-    students = student_collection.find()
+def add_student(first_name, last_name, age, cgpa):
+    student = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "age": age,
+        "cgpa": cgpa
+    }
+    new_student = student_collection.insert_one(student)
 
+    print("Inserted ID:", new_student.inserted_id)
+
+
+def find_all_students():
+    students = list(student_collection.find())
     for student in students:
-        printer.pprint(student)
+        student["_id"] = str(student["_id"])
+    return students
 
 def find_rina():
     rina = student_collection.find_one({"first_name": "rina"})
@@ -49,7 +61,8 @@ def get_student_by_id(student_id):
     _id = ObjectId(student_id)
 
     student = student_collection.find_one({"_id": _id})
-    printer.pprint(student)
+    student["_id"] = str(student["_id"])
+    return student
 
 def get_age_range(min_age, max_age):
     query = {
@@ -87,14 +100,14 @@ def project_columns():
     for student in students:
         printer.pprint(student)
 
-def update_student_by_id(student_id):
+def update_student_by_id(student_id, dept, cgpa_inc):
     from bson.objectid import ObjectId
 
     _id = ObjectId(student_id)
 
     all_updates = {
-        "$set": {"dept": "biotech"},
-        "$inc": {"cgpa": 0.1}
+        "$set": {"dept": dept},
+        "$inc": {"cgpa": cgpa_inc}
         
     }
 
@@ -168,7 +181,7 @@ def get_cgpa_avg():
         }
     ])
     for data in result:
-        print(data)
+        return data
 def join_student_to_address():
     result = student_collection.aggregate([{
         "$lookup": {
