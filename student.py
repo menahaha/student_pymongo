@@ -9,6 +9,7 @@ client = MongoClient(connection_string)
 dbs = client.list_database_names()
 production = client.production
 student_collection = production.student_collection
+users_collection = production.users
 
 def create_documents():
     first_names = ["rina", "tim", "ram"]
@@ -206,5 +207,10 @@ def get_ist(student_id):
         ZoneInfo("Asia/Kolkata")
     )
     print(ist_time)
+
+users_collection.update_one(
+    {"username": "harish"},
+    {"$set": {"role": "admin"}}
+)
 
 
