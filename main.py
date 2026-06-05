@@ -58,6 +58,19 @@ def delete_student(student_id: str, user=Depends(admin_only)):
 @app.get("/avgcgpa")
 def avg_cgpa():
     return get_cgpa_avg()
+class Refrequest(BaseModel):
+    refresh_token: str
+
+@app.post("/refresh")
+def refresh_token(req:Refrequest):
+    payload = verify_token(req.refresh_token)
+    if payload is None:
+        return {"message": "invalid refresh token"}
+    if payload.get("type") != "refresh":
+        return {"message": "not a refresh token"}
+    new_access_token = create_access_token({ "username": payload["username"], "role": payload["role"]})
+    return{"access_token": new_access_token}
+
 
 class User(BaseModel):
     username: str
@@ -76,20 +89,23 @@ def register(user: User):
 
 
 @app.post("/login")
+
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    db_user = users_collection.find_one({
-        "username": form_data.username
-    })
+    db_user = users_collection.find_one({"username": form_data.username})
+
     if not db_user:
         return {"message": "user not found"}
     if not verify_password(form_data.password, db_user["password"]):
         return {"message": "incorrect password"}
-    token = create_access_token({
+    data = {
         "username": db_user["username"],
         "role": db_user["role"]
-    })
+    }
+    access_token = create_access_token(data)
+    refresh_token = create_refresh_token(data)
     return {
-        "access_token": token,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
         "token_type": "bearer"
     }
 

@@ -19,15 +19,26 @@ def verify_password(plain_password, hashed_password):
 
 def create_access_token(data):
     payload = data.copy()
-
-    expire = datetime.now(timezone.utc) + timedelta(minutes = 30)
-
+    expire = datetime.now(timezone.utc) + timedelta(minutes = 10)
     payload.update({
-        "exp": expire
+        "exp": expire,
+        "type": "access"
     })
 
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     return token
+
+def create_refresh_token(data):
+    payload = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(hours=2)
+    payload.update({
+        "exp": expire,
+        "type": "refresh"
+    })
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return token
+
+
 
 def verify_token(token):
     try: 
